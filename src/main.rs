@@ -1,5 +1,9 @@
-use anyhow::Result;
-use rusqlite::{params, Connection};
+use std::fs::create_dir_all;
+use std::path::Path;
+
+use anyhow::{Context, Result};
+use directories::ProjectDirs;
+use rusqlite::Connection;
 
 #[derive(Debug)]
 struct Person {
@@ -8,38 +12,39 @@ struct Person {
     data: Option<Vec<u8>>,
 }
 
+static SETTINGS_NAME: &str = "settings.sqlite3";
+
 fn main() -> Result<()> {
-    let conn = Connection::open_in_memory()?;
+    // On windows, dirs's ProjectDirs::from("org", "username", "appname") creates the
+    // path "username/appname". See https://github.com/dirs-dev/directories-rs/blob/main/src/win.rs#L94.
+    // Does anyone actually like the extra layer of path?
+    // In my experience, all it does is make it harder to find the folder corresponding
+    // to an app. So I'm omitting the second argument.
+    let proj_dirs =
+        ProjectDirs::from("", "", "spcplay-rs").context("failed to locate config file dir")?;
+
+    let config_dir: &Path = proj_dirs.config_dir();
+    create_dir_all(config_dir).context("creating config file dir")?;
+
+    let settings_path = config_dir.join(SETTINGS_NAME);
+
+    let conn = Connection::open(&settings_path)?;
 
     conn.execute(
-        "CREATE TABLE person (
-                  id              INTEGER PRIMARY KEY,
-                  name            TEXT NOT NULL,
-                  data            BLOB
-                  )",
+        "create table if not exists cat_colors (
+             id integer primary key,
+             name text not null unique
+         )",
         [],
     )?;
-    let me = Person {
-        id: 0,
-        name: "Steven".to_string(),
-        data: None,
-    };
     conn.execute(
-        "INSERT INTO person (name, data) VALUES (?1, ?2)",
-        params![me.name, me.data],
+        "create table if not exists cats (
+             id integer primary key,
+             name text not null,
+             color_id integer not null references cat_colors(id)
+         )",
+        [],
     )?;
 
-    let mut stmt = conn.prepare("SELECT id, name, data FROM person")?;
-    let person_iter = stmt.query_map([], |row| {
-        Ok(Person {
-            id: row.get(0)?,
-            name: row.get(1)?,
-            data: row.get(2)?,
-        })
-    })?;
-
-    for person in person_iter {
-        println!("Found person {:?}", person.unwrap());
-    }
     Ok(())
 }

@@ -7,4 +7,5 @@ edition = "2018"
 
 [dependencies]
 anyhow = "1.0.44"
+directories = "4.0.1"
 rusqlite = "0.25.3"
