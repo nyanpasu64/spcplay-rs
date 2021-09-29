@@ -1,5 +1,5 @@
 use std::fs::create_dir_all;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
 use directories::ProjectDirs;
@@ -14,7 +14,7 @@ struct Person {
 
 static SETTINGS_NAME: &str = "settings.sqlite3";
 
-fn main() -> Result<()> {
+fn create_config_dir() -> Result<PathBuf> {
     // On windows, dirs's ProjectDirs::from("org", "username", "appname") creates the
     // path "username/appname". See https://github.com/dirs-dev/directories-rs/blob/main/src/win.rs#L94.
     // Does anyone actually like the extra layer of path?
@@ -26,6 +26,11 @@ fn main() -> Result<()> {
     let config_dir: &Path = proj_dirs.config_dir();
     create_dir_all(config_dir).context("creating config file dir")?;
 
+    Ok(config_dir.to_owned())
+}
+
+fn main() -> Result<()> {
+    let config_dir = create_config_dir()?;
     let settings_path = config_dir.join(SETTINGS_NAME);
 
     let conn = Connection::open(&settings_path)?;
