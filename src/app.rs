@@ -98,7 +98,7 @@ impl epi::App for TemplateApp {
     /// Called once before the first frame.
     fn setup(
         &mut self,
-        _ctx: &egui::CtxRef,
+        ctx: &egui::CtxRef,
         _frame: &mut epi::Frame<'_>,
         _storage: Option<&dyn epi::Storage>,
     ) {
@@ -108,6 +108,24 @@ impl epi::App for TemplateApp {
         if let Some(storage) = _storage {
             *self = epi::get_value(storage, epi::APP_KEY).unwrap_or_default()
         }
+
+        let mut dark = egui::Visuals::dark();
+        let w = &mut dark.widgets;
+
+        let white = egui::Color32::from_gray(0xf4);
+        for x in [
+            &mut w.noninteractive,
+            &mut w.inactive,
+            &mut w.hovered,
+            &mut w.active,
+            &mut w.open,
+        ] {
+            x.fg_stroke.color = white;
+        }
+
+        // Setting dark.override_text_color doesn't work.
+
+        ctx.set_visuals(dark);
     }
 
     /// Called by the frame work to save state before shutdown.
