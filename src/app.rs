@@ -1,5 +1,65 @@
 use eframe::{egui, epi};
 
+use std::fs::create_dir_all;
+use std::path::{Path, PathBuf};
+
+use anyhow::{Context, Result};
+use directories::ProjectDirs;
+use rusqlite::Connection;
+
+#[derive(Debug)]
+struct Person {
+    id: i32,
+    name: String,
+    data: Option<Vec<u8>>,
+}
+
+static SETTINGS_NAME: &str = "settings.sqlite3";
+
+fn create_config_dir() -> Result<PathBuf> {
+    // On windows, dirs's ProjectDirs::from("org", "username", "appname") creates the
+    // path "username/appname". See https://github.com/dirs-dev/directories-rs/blob/main/src/win.rs#L94.
+    // Does anyone actually like the extra layer of path?
+    // In my experience, all it does is make it harder to find the folder corresponding
+    // to an app. So I'm omitting the second argument.
+    let proj_dirs =
+        ProjectDirs::from("", "", "spcplay-rs").context("failed to locate config file dir")?;
+
+    let config_dir: &Path = proj_dirs.config_dir();
+    create_dir_all(config_dir).context("creating config file dir")?;
+
+    Ok(config_dir.to_owned())
+}
+
+// TODO call in response to menu item
+fn touch_sql(conn: &Connection) -> Result<()> {
+    conn.execute(
+        "create table if not exists cat_colors (
+             id integer primary key,
+             name text not null unique
+         )",
+        [],
+    )?;
+    conn.execute(
+        "create table if not exists cats (
+             id integer primary key,
+             name text not null,
+             color_id integer not null references cat_colors(id)
+         )",
+        [],
+    )?;
+    Ok(())
+}
+
+fn open_settings() -> Result<Connection> {
+    let config_dir = create_config_dir()?;
+    let settings_path = config_dir.join(SETTINGS_NAME);
+
+    let conn = Connection::open(&settings_path)?;
+
+    Ok(conn)
+}
+
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "persistence", serde(default))] // if we add new fields, give them default values when deserializing old state
@@ -10,15 +70,20 @@ pub struct TemplateApp {
     // this how you opt-out of serialization of a member
     #[cfg_attr(feature = "persistence", serde(skip))]
     value: f32,
+
+    #[cfg_attr(feature = "persistence", serde(skip))]
+    conn: Connection,
 }
 
-impl Default for TemplateApp {
-    fn default() -> Self {
-        Self {
+impl TemplateApp {
+    pub fn new() -> Result<Self> {
+        let conn = open_settings()?;
+        Ok(Self {
             // Example stuff:
             label: "Hello World!".to_owned(),
             value: 2.7,
-        }
+            conn,
+        })
     }
 }
 
@@ -52,8 +117,6 @@ impl epi::App for TemplateApp {
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &egui::CtxRef, frame: &mut epi::Frame<'_>) {
-        let Self { label, value } = self;
-
         // Examples of how to create different panels and windows.
         // Pick whichever suits you.
         // Tip: a good default choice is to just keep the `CentralPanel`.
@@ -66,6 +129,9 @@ impl epi::App for TemplateApp {
                     if ui.button("Quit").clicked() {
                         frame.quit();
                     }
+                    if ui.button("Run SQL").clicked() {
+                        touch_sql(&self.conn);
+                    }
                 });
             });
         });
@@ -75,12 +141,12 @@ impl epi::App for TemplateApp {
 
             ui.horizontal(|ui| {
                 ui.label("Write something: ");
-                ui.text_edit_singleline(label);
+                ui.text_edit_singleline(&mut self.label);
             });
 
-            ui.add(egui::Slider::new(value, 0.0..=10.0).text("value"));
+            ui.add(egui::Slider::new(&mut self.value, 0.0..=10.0).text("value"));
             if ui.button("Increment").clicked() {
-                *value += 1.0;
+                self.value += 1.0;
             }
 
             ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
