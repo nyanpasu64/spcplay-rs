@@ -73,6 +73,8 @@ pub struct TemplateApp {
 
     #[cfg_attr(feature = "persistence", serde(skip))]
     conn: Connection,
+
+    error_dialog: Option<String>,
 }
 
 impl TemplateApp {
@@ -83,6 +85,7 @@ impl TemplateApp {
             label: "Hello World!".to_owned(),
             value: 2.7,
             conn,
+            error_dialog: None,
         })
     }
 }
@@ -130,7 +133,9 @@ impl epi::App for TemplateApp {
                         frame.quit();
                     }
                     if ui.button("Run SQL").clicked() {
-                        touch_sql(&self.conn);
+                        if let Err(err) = touch_sql(&self.conn) {
+                            self.error_dialog = Some(err.to_string());
+                        }
                     }
                 });
             });
@@ -168,13 +173,22 @@ impl epi::App for TemplateApp {
             egui::warn_if_debug_build(ui);
         });
 
-        if false {
-            egui::Window::new("Window").show(ctx, |ui| {
-                ui.label("Windows can be moved by dragging them.");
-                ui.label("They are automatically sized based on contents.");
-                ui.label("You can turn on resizing and scrolling if you like.");
-                ui.label("You would normally chose either panels OR windows.");
+        if let Some(ref msg) = &self.error_dialog {
+            // sigh... can't use a single variable for both
+            let mut open = true;
+            let mut button_pressed = false;
+
+            // open remains borrowed until show() returns.
+            egui::Window::new("Error").open(&mut open).show(ctx, |ui| {
+                ui.label(msg);
+                if ui.button("OK").clicked() {
+                    button_pressed = false;
+                }
             });
+
+            if !open || button_pressed {
+                self.error_dialog = None;
+            }
         }
     }
 }
