@@ -80,7 +80,10 @@ fn play_spc_file<P: AsRef<Path> + Display>(path: P) -> Result<(), Cow<'static, s
             let mut ring_buffer = driver.ring_buffer.lock().unwrap();
 
             let num_frames = ((ring_buffer.samples_read - ring_buffer.samples_written) as u32) / 2;
-            apu.render(&mut *left, &mut *right, num_frames as i32);
+            apu.render(
+                &mut left[0..num_frames as usize],
+                &mut right[0..num_frames as usize],
+            );
 
             match end_state {
                 Some(ref mut state) => {

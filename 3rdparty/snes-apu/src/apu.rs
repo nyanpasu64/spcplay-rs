@@ -1,3 +1,5 @@
+use crate::dsp::dsp::BUFFER_LEN;
+
 use super::smp::Smp;
 use super::dsp::dsp::Dsp;
 use super::timer::Timer;
@@ -81,7 +83,13 @@ impl Apu {
         ret
     }
 
-    pub fn render(&mut self, left_buffer: &mut [i16], right_buffer: &mut [i16], num_samples: i32) {
+    pub fn render(&mut self, left_buffer: &mut [i16], right_buffer: &mut [i16]) {
+        assert!(left_buffer.len() == right_buffer.len());
+        let num_samples = left_buffer.len();
+
+        assert!(num_samples <= BUFFER_LEN);
+        let num_samples = num_samples as i32;
+
         let smp = self.smp.as_mut().unwrap();
         let dsp = self.dsp.as_mut().unwrap();
         while dsp.output_buffer.get_sample_count() < num_samples {
@@ -89,7 +97,24 @@ impl Apu {
             dsp.flush();
         }
 
-        dsp.output_buffer.read(left_buffer, right_buffer, num_samples);
+        dsp.output_buffer.read(left_buffer, right_buffer);
+    }
+
+    pub fn render_interleaved(&mut self, out: &mut [i16]) {
+        assert!(out.len() % 2 == 0);
+        let num_samples = out.len() / 2;
+
+        assert!(num_samples <= BUFFER_LEN);
+        let num_samples = num_samples as i32;
+
+        let smp = self.smp.as_mut().unwrap();
+        let dsp = self.dsp.as_mut().unwrap();
+        while dsp.output_buffer.get_sample_count() < num_samples {
+            smp.run(num_samples * 64);
+            dsp.flush();
+        }
+
+        dsp.output_buffer.read_interleaved(out);
     }
 
     pub fn cpu_cycles_callback(&mut self, num_cycles: i32) {
