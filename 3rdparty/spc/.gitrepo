@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/emu-rs/spc.git
+	branch = master
+	commit = 077c1cbb632d20b50c20c3848450cb43759804e6
+	parent = 465d2af1d4dac85f4663bb5c50f3c958215f1756
+	method = rebase
+	cmdver = 0.4.3
