@@ -2,6 +2,7 @@
 name = "snes-apu"
 version = "0.1.12"
 authors = ["ferris <jake@fusetools.com>"]
+edition = "2018"
 description = "A Super Nintendo audio unit emulator."
 homepage = "https://github.com/emu-rs/snes-apu"
 repository = "https://github.com/emu-rs/snes-apu"
