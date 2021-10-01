@@ -9,7 +9,7 @@ keywords = ["snes", "super", "nintendo", "spc", "emulator"]
 license = "BSD-2-Clause"
 
 [dependencies]
-spc = "0.1.0"
+spc = { path = "../spc" }
 
 [dev-dependencies]
 cpal = "0.4.4"
