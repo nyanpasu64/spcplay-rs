@@ -1,55 +1,7 @@
-use std::fs::create_dir_all;
-use std::path::{Path, PathBuf};
-
-use anyhow::{Context, Result};
-use directories::ProjectDirs;
-use rusqlite::Connection;
-
-#[derive(Debug)]
-struct Person {
-    id: i32,
-    name: String,
-    data: Option<Vec<u8>>,
-}
-
-static SETTINGS_NAME: &str = "settings.sqlite3";
-
-fn create_config_dir() -> Result<PathBuf> {
-    // On windows, dirs's ProjectDirs::from("org", "username", "appname") creates the
-    // path "username/appname". See https://github.com/dirs-dev/directories-rs/blob/main/src/win.rs#L94.
-    // Does anyone actually like the extra layer of path?
-    // In my experience, all it does is make it harder to find the folder corresponding
-    // to an app. So I'm omitting the second argument.
-    let proj_dirs =
-        ProjectDirs::from("", "", "spcplay-rs").context("failed to locate config file dir")?;
-
-    let config_dir: &Path = proj_dirs.config_dir();
-    create_dir_all(config_dir).context("creating config file dir")?;
-
-    Ok(config_dir.to_owned())
-}
-
-fn main() -> Result<()> {
-    let config_dir = create_config_dir()?;
-    let settings_path = config_dir.join(SETTINGS_NAME);
-
-    let conn = Connection::open(&settings_path)?;
-
-    conn.execute(
-        "create table if not exists cat_colors (
-             id integer primary key,
-             name text not null unique
-         )",
-        [],
-    )?;
-    conn.execute(
-        "create table if not exists cats (
-             id integer primary key,
-             name text not null,
-             color_id integer not null references cat_colors(id)
-         )",
-        [],
-    )?;
-
-    Ok(())
+// When compiling natively:
+#[cfg(not(target_arch = "wasm32"))]
+fn main() {
+    let app = spcplay_rs::TemplateApp::default();
+    let native_options = eframe::NativeOptions::default();
+    eframe::run_native(Box::new(app), native_options);
 }
