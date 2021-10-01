@@ -1152,8 +1152,6 @@ impl Smp {
                     0xfd => transfer!(self.reg_a, self.reg_y, false),
                     0xfe => self.bne_y_dec(),
                     0xff => self.sleep_stop(),
-
-                    _ => panic!("Invalid opcode")
                 }
             } else {
                 self.cycles(2);
