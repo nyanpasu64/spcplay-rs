@@ -11,7 +11,7 @@ use futures::task::{self, Executor, Run};
 use snes_apu::apu::Apu;
 use snes_apu::dsp::dsp::{BUFFER_LEN, SAMPLE_RATE};
 
-use spc::spc::{Emulator, Spc};
+use spc::{Emulator, Spc};
 
 use std::borrow::Cow;
 use std::env;

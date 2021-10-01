@@ -2,7 +2,7 @@ use super::super::apu::Apu;
 use super::voice::{Voice, ResamplingMode};
 use super::filter::Filter;
 use super::ring_buffer::RingBuffer;
-use super::super::spc::spc::{Spc, REG_LEN};
+use spc::{Spc, REG_LEN};
 use super::dsp_helpers;
 
 pub const SAMPLE_RATE: usize = 32000;

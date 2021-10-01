@@ -1,7 +1,7 @@
 use super::smp::Smp;
 use super::dsp::dsp::Dsp;
 use super::timer::Timer;
-use super::spc::spc::{Spc, RAM_LEN, IPL_ROM_LEN};
+use spc::{Spc, RAM_LEN, IPL_ROM_LEN};
 
 static DEFAULT_IPL_ROM: [u8; IPL_ROM_LEN] = [
     0xcd, 0xef, 0xbd, 0xe8, 0x00, 0xc6, 0x1d, 0xd0,
