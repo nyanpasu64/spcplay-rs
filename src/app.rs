@@ -60,18 +60,11 @@ fn open_settings() -> Result<Connection> {
     Ok(conn)
 }
 
-/// We derive Deserialize/Serialize so we can persist app state on shutdown.
-#[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
-#[cfg_attr(feature = "persistence", serde(default))] // if we add new fields, give them default values when deserializing old state
 pub struct TemplateApp {
     // Example stuff:
     label: String,
-
-    // this how you opt-out of serialization of a member
-    #[cfg_attr(feature = "persistence", serde(skip))]
     value: f32,
 
-    #[cfg_attr(feature = "persistence", serde(skip))]
     conn: Connection,
 
     error_dialog: Option<String>,
@@ -102,13 +95,6 @@ impl epi::App for TemplateApp {
         _frame: &mut epi::Frame<'_>,
         _storage: Option<&dyn epi::Storage>,
     ) {
-        // Load previous app state (if any).
-        // Note that you must enable the `persistence` feature for this to work.
-        #[cfg(feature = "persistence")]
-        if let Some(storage) = _storage {
-            *self = epi::get_value(storage, epi::APP_KEY).unwrap_or_default()
-        }
-
         // Set fonts.
         {
             static PROPORTIONAL: &str = "B612";
@@ -154,13 +140,6 @@ impl epi::App for TemplateApp {
 
             ctx.set_visuals(dark);
         }
-    }
-
-    /// Called by the frame work to save state before shutdown.
-    /// Note that you must enable the `persistence` feature for this to work.
-    #[cfg(feature = "persistence")]
-    fn save(&mut self, storage: &mut dyn epi::Storage) {
-        epi::set_value(storage, epi::APP_KEY, self);
     }
 
     /// Called each time the UI needs repainting, which may be many times per second.

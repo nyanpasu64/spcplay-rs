@@ -9,17 +9,9 @@ edition = "2018"
 [dependencies]
 anyhow = "1.0.44"
 directories = "4.0.1"
-eframe = { version = "0.14.0", default-features = false } # Gives us egui, epi and web+native backends
+# Gives us egui, epi and web+native backends
+eframe = { version = "0.14.0", default-features = false } # Disable bundled fonts
 rusqlite = "0.25.3"
-
-serde = { version = "1", features = ["derive"], optional = true }
-
-[features]
-default = []
-persistence = [
-    "eframe/persistence",
-    "serde",
-] # Enable if you want to persist app state on shutdown
 
 [patch.crates-io]
 
