@@ -109,23 +109,51 @@ impl epi::App for TemplateApp {
             *self = epi::get_value(storage, epi::APP_KEY).unwrap_or_default()
         }
 
-        let mut dark = egui::Visuals::dark();
-        let w = &mut dark.widgets;
+        // Set fonts.
+        {
+            static PROPORTIONAL: &str = "B612";
+            static MONOSPACE: &str = "Inconsolata";
 
-        let white = egui::Color32::from_gray(0xf4);
-        for x in [
-            &mut w.noninteractive,
-            &mut w.inactive,
-            &mut w.hovered,
-            &mut w.active,
-            &mut w.open,
-        ] {
-            x.fg_stroke.color = white;
+            let mut fonts = egui::FontDefinitions::default();
+            fonts.font_data.insert(
+                PROPORTIONAL.to_owned(),
+                std::borrow::Cow::Borrowed(include_bytes!("../fonts/B612-Regular.ttf")),
+            );
+            fonts.font_data.insert(
+                MONOSPACE.to_owned(),
+                std::borrow::Cow::Borrowed(include_bytes!("../fonts/Inconsolata-Regular.ttf")),
+            );
+            fonts.fonts_for_family.insert(
+                egui::FontFamily::Proportional,
+                vec![PROPORTIONAL.to_owned()],
+            );
+            fonts
+                .fonts_for_family
+                .insert(egui::FontFamily::Monospace, vec![MONOSPACE.to_owned()]);
+
+            ctx.set_fonts(fonts);
         }
 
-        // Setting dark.override_text_color doesn't work.
+        // Set color theme.
+        {
+            let mut dark = egui::Visuals::dark();
+            let w = &mut dark.widgets;
 
-        ctx.set_visuals(dark);
+            let white = egui::Color32::from_gray(0xee);
+            for x in [
+                &mut w.noninteractive,
+                &mut w.inactive,
+                &mut w.hovered,
+                &mut w.active,
+                &mut w.open,
+            ] {
+                x.fg_stroke.color = white;
+            }
+
+            // Setting dark.override_text_color doesn't work.
+
+            ctx.set_visuals(dark);
+        }
     }
 
     /// Called by the frame work to save state before shutdown.
