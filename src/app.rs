@@ -9,13 +9,6 @@ use rusqlite::Connection;
 
 use crate::spcplay::SpcPlayer;
 
-#[derive(Debug)]
-struct Person {
-    id: i32,
-    name: String,
-    data: Option<Vec<u8>>,
-}
-
 static SETTINGS_NAME: &str = "settings.sqlite3";
 
 fn create_config_dir() -> Result<PathBuf> {
@@ -31,6 +24,15 @@ fn create_config_dir() -> Result<PathBuf> {
     create_dir_all(config_dir).context("creating config file dir")?;
 
     Ok(config_dir.to_owned())
+}
+
+fn open_settings() -> Result<Connection> {
+    let config_dir = create_config_dir()?;
+    let settings_path = config_dir.join(SETTINGS_NAME);
+
+    let conn = Connection::open(&settings_path)?;
+
+    Ok(conn)
 }
 
 // TODO call in response to menu item
@@ -53,21 +55,9 @@ fn touch_sql(conn: &Connection) -> Result<()> {
     Ok(())
 }
 
-fn open_settings() -> Result<Connection> {
-    let config_dir = create_config_dir()?;
-    let settings_path = config_dir.join(SETTINGS_NAME);
-
-    let conn = Connection::open(&settings_path)?;
-
-    Ok(conn)
-}
-
 pub struct SpcPlayApp {
-    // Example stuff:
-    label: String,
-    value: f32,
-
-    conn: Connection,
+    // Settings database connection
+    settings: Option<Connection>,
 
     error_dialog: Option<String>,
 
@@ -76,17 +66,19 @@ pub struct SpcPlayApp {
 }
 
 impl SpcPlayApp {
-    pub fn new() -> Result<Self> {
-        let conn = open_settings()?;
-        Ok(Self {
-            // Example stuff:
-            label: "Hello World!".to_owned(),
-            value: 2.7,
-            conn,
-            error_dialog: None,
+    pub fn new() -> Self {
+        let settings = open_settings();
+        let (settings, error_dialog) = match settings {
+            Ok(settings) => (Some(settings), None),
+            Err(err) => (None, Some(err.to_string())),
+        };
+
+        Self {
+            settings,
+            error_dialog,
             spc_player: None,
             spc_info: "".to_owned(),
-        })
+        }
     }
 }
 
@@ -161,9 +153,11 @@ impl epi::App for SpcPlayApp {
             // The top panel is often a good place for a menu bar:
             egui::menu::bar(ui, |ui| {
                 egui::menu::menu(ui, "File", |ui| {
-                    if ui.button("Run SQL").clicked() {
-                        if let Err(err) = touch_sql(&self.conn) {
-                            self.error_dialog = Some(err.to_string());
+                    if let Some(ref settings) = &self.settings {
+                        if ui.button("Run SQL").clicked() {
+                            if let Err(err) = touch_sql(settings) {
+                                self.error_dialog = Some(err.to_string());
+                            }
                         }
                     }
                     if ui.button("Quit").clicked() {
