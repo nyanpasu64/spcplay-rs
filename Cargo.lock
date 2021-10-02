@@ -1312,6 +1312,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "snes-apu"
+version = "0.1.12"
+dependencies = [
+ "spc",
+]
+
+[[package]]
+name = "spc"
+version = "0.1.1"
+
+[[package]]
 name = "spcplay-rs"
 version = "0.1.0"
 dependencies = [
@@ -1319,6 +1330,8 @@ dependencies = [
  "directories",
  "eframe",
  "rusqlite",
+ "snes-apu",
+ "spc",
 ]
 
 [[package]]

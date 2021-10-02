@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/emu-rs/snes-apu.git
+	branch = master
+	commit = 13c1752c0a9d43a32d0566563815eaa030fc7245
+	parent = 2c1c24802e425f0cfbbe17d24a546a763b891de4
+	method = rebase
+	cmdver = 0.4.3
