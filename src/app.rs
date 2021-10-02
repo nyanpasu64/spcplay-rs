@@ -7,7 +7,7 @@ use anyhow::{Context, Result};
 use directories::ProjectDirs;
 use rusqlite::Connection;
 
-use crate::spcplay::SpcPlayer;
+use crate::spcplay::{AudioHandle, SpcPlayer};
 
 static SETTINGS_NAME: &str = "settings.sqlite3";
 
@@ -61,7 +61,7 @@ pub struct SpcPlayApp {
 
     error_dialog: Option<String>,
 
-    spc_player: Option<SpcPlayer>,
+    audio: Option<AudioHandle>,
     spc_info: String,
 }
 
@@ -76,7 +76,7 @@ impl SpcPlayApp {
         Self {
             settings,
             error_dialog,
-            spc_player: None,
+            audio: None,
             spc_info: "".to_owned(),
         }
     }
@@ -153,6 +153,12 @@ impl epi::App for SpcPlayApp {
             // The top panel is often a good place for a menu bar:
             egui::menu::bar(ui, |ui| {
                 egui::menu::menu(ui, "File", |ui| {
+                    if ui.button("Open…").clicked() {
+                        if let Err(err) = self.on_open_pressed() {
+                            self.error_dialog = Some(err.to_string());
+                        }
+                    }
+
                     if let Some(ref settings) = &self.settings {
                         if ui.button("Run SQL").clicked() {
                             if let Err(err) = touch_sql(settings) {
@@ -196,5 +202,22 @@ impl epi::App for SpcPlayApp {
                 self.error_dialog = None;
             }
         }
+    }
+}
+
+impl SpcPlayApp {
+    fn on_open_pressed(&mut self) -> Result<()> {
+        if let Some(path) = rfd::FileDialog::new().pick_file() {
+            let player = SpcPlayer::new(&path)?;
+
+            self.spc_info = player.get_spc_info();
+
+            let audio = AudioHandle::new(player)?;
+            self.audio = Some(audio);
+
+            self.audio.as_ref().unwrap().play()?;
+        }
+
+        Ok(())
     }
 }

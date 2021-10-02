@@ -119,12 +119,12 @@ impl SpcPlayer {
     }
 }
 
-pub struct CpalDriver {
+pub struct AudioHandle {
     stream: cpal::Stream,
 }
 
-impl CpalDriver {
-    pub fn new(mut spc: SpcPlayer) -> Result<CpalDriver> {
+impl AudioHandle {
+    pub fn new(mut spc: SpcPlayer) -> Result<AudioHandle> {
         let host = cpal::default_host();
 
         let device = host
@@ -174,7 +174,7 @@ impl CpalDriver {
             )
             .context("Error building output stream")?;
 
-        Ok(CpalDriver { stream })
+        Ok(AudioHandle { stream })
     }
 
     pub fn play(&self) -> Result<()> {
