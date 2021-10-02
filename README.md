@@ -1,13 +1,8 @@
-# egui template
+# spcplay-rs
 
-[![dependency status](https://deps.rs/repo/github/emilk/egui_template/status.svg)](https://deps.rs/repo/github/emilk/egui_template)
-[![Build Status](https://github.com/emilk/egui_template/workflows/CI/badge.svg)](https://github.com/emilk/egui_template/actions?workflow=CI)
+**This project is dead.**
 
-This is a template repo for [egui](https://github.com/emilk/egui/).
-
-The goal is for this to be the simplest way to get started writing a GUI app in Rust.
-
-You can compile your app natively or for the web, and share it using Github Pages.
+spcplay-rs was an attempt to write a .spc player in Rust with bookmarks/savestates. Unfortunately, I ran into paper cuts with UI frameworks (kas triggered rust-analyzer panics and egui has limited layout abilities), and the snes-apu crate (which promised to be a "highly-accurate emulator" for SNES audio) had multiple severe flaws (using `+= 1` for wrapping increment which panics on debug, treating volumes as unsigned rather than two's complement/surround, and likely undefined behavior from aliased `&mut`) plus likely other flaws I'm not yet aware of. So I am not continuing development of this project in Rust.
 
 ## Getting started
 
@@ -28,30 +23,6 @@ On Linux you need to first run:
 On Fedora Rawhide you need to run:
 
 `dnf install clang clang-devel clang-tools-extra speech-dispatcher-devel libxkbcommon-devel pkg-config openssl-devel`
-
-### Compiling for the web
-
-You can compile your app to [WASM](https://en.wikipedia.org/wiki/WebAssembly) and publish it as a web page. For this you need to set up some tools. There are a few simple scripts that help you with this:
-
-``` sh
-./setup_web.sh
-./build_web.sh
-./start_server.sh
-open http://127.0.0.1:8080/
-```
-
-* `setup_web.sh` installs the tools required to build for web
-* `build_web.sh` compiles your code to wasm and puts it in the `docs/` folder (see below)
-* `start_server.sh` starts a local HTTP server so you can test before you publish
-* Open http://127.0.0.1:8080/ in a web browser to view
-
-The finished web app is found in the `docs/` folder (this is so that you can easily share it with [GitHub Pages](https://docs.github.com/en/free-pro-team@latest/github/working-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)). It consists of three files:
-
-* `index.html`: A few lines of HTML, CSS and JS that loads your app. **You need to edit this** (once) to replace `egui_template` with the name of your crate!
-* `your_crate_bg.wasm`: What the Rust code compiles to.
-* `your_crate.js`: Auto-generated binding between Rust and JS.
-
-You can test the template app at <https://emilk.github.io/egui_template/>.
 
 ## Updating egui
 
