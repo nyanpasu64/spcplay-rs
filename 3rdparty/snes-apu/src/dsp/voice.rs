@@ -53,7 +53,7 @@ impl VoiceBuffer {
 
 pub struct Voice {
     dsp: *mut Dsp,
-    emulator: *mut Apu,
+    apu: *mut Apu,
 
     pub envelope: Envelope,
 
@@ -82,10 +82,10 @@ pub struct Voice {
 }
 
 impl Voice {
-    pub fn new(dsp: *mut Dsp, emulator: *mut Apu, resampling_mode: ResamplingMode) -> Voice {
+    pub fn new(dsp: *mut Dsp, apu: *mut Apu, resampling_mode: ResamplingMode) -> Voice {
         Voice {
             dsp: dsp,
-            emulator: emulator,
+            apu: apu,
 
             envelope: Envelope::new(dsp),
 
@@ -122,9 +122,9 @@ impl Voice {
     }
 
     #[inline]
-    fn emulator(&self) -> &mut Apu {
+    fn apu(&self) -> &mut Apu {
         unsafe {
-            &mut (*self.emulator)
+            &mut (*self.apu)
         }
     }
 
@@ -236,7 +236,7 @@ impl Voice {
     fn read_next_block(&mut self) {
         let mut buf = [0; 9];
         for i in 0..9 {
-            buf[i] = self.emulator().read_u8(self.sample_address + (i as u32));
+            buf[i] = self.apu().read_u8(self.sample_address + (i as u32));
         }
         self.brr_block_decoder.read(&buf);
         self.sample_address += 9;

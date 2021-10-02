@@ -1,7 +1,7 @@
 use super::apu::Apu;
 
 pub struct Smp {
-    emulator: *mut Apu,
+    apu: *mut Apu,
 
     pub reg_pc: u16,
     pub reg_a: u8,
@@ -24,9 +24,9 @@ pub struct Smp {
 }
 
 impl Smp {
-    pub fn new(emulator: *mut Apu) -> Smp {
+    pub fn new(apu: *mut Apu) -> Smp {
         Smp {
-            emulator: emulator,
+            apu: apu,
 
             reg_pc: 0xffc0,
             reg_a: 0,
@@ -50,9 +50,9 @@ impl Smp {
     }
 
     #[inline]
-    fn emulator(&self) -> &mut Apu {
+    fn apu(&self) -> &mut Apu {
         unsafe {
-            &mut (*self.emulator)
+            &mut (*self.apu)
         }
     }
 
@@ -88,18 +88,18 @@ impl Smp {
     }
 
     fn cycles(&mut self, num_cycles: i32) {
-        self.emulator().cpu_cycles_callback(num_cycles);
+        self.apu().cpu_cycles_callback(num_cycles);
         self.cycle_count += num_cycles;
     }
 
     fn read(&mut self, addr: u16) -> u8 {
         self.cycles(1);
-        self.emulator().read_u8(addr as u32)
+        self.apu().read_u8(addr as u32)
     }
 
     fn write(&mut self, addr: u16, value: u8) {
         self.cycles(1);
-        self.emulator().write_u8(addr as u32, value);
+        self.apu().write_u8(addr as u32, value);
     }
 
     fn read_pc(&mut self) -> u8 {

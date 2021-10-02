@@ -21,7 +21,7 @@ static COUNTER_OFFSETS: [i32; 32] = [
     536, 0, 1040, 536, 0, 1040, 536, 0, 1040, 536, 0, 1040, 536, 0, 1040, 0, 0];
 
 pub struct Dsp {
-    emulator: *mut Apu,
+    apu: *mut Apu,
 
     pub voices: Vec<Box<Voice>>,
 
@@ -52,10 +52,10 @@ pub struct Dsp {
 }
 
 impl Dsp {
-    pub fn new(emulator: *mut Apu) -> Box<Dsp> {
+    pub fn new(apu: *mut Apu) -> Box<Dsp> {
         let resampling_mode = ResamplingMode::Gaussian;
         let mut ret = Box::new(Dsp {
-            emulator: emulator,
+            apu: apu,
 
             voices: Vec::with_capacity(NUM_VOICES),
 
@@ -86,7 +86,7 @@ impl Dsp {
         });
         let ret_ptr = &mut *ret as *mut _;
         for _ in 0..NUM_VOICES {
-            ret.voices.push(Box::new(Voice::new(ret_ptr, emulator, resampling_mode)));
+            ret.voices.push(Box::new(Voice::new(ret_ptr, apu, resampling_mode)));
         }
         ret.set_filter_coefficient(0x00, 0x80);
         ret.set_filter_coefficient(0x01, 0xff);
@@ -101,9 +101,9 @@ impl Dsp {
     }
 
     #[inline]
-    fn emulator(&self) -> &mut Apu {
+    fn apu(&self) -> &mut Apu {
         unsafe {
-            &mut (*self.emulator)
+            &mut (*self.apu)
         }
     }
 
@@ -190,8 +190,8 @@ impl Dsp {
             right_out = dsp_helpers::multiply_volume(right_out, self.vol_right);
 
             let echo_address = (self.echo_start_address + (self.echo_pos as u16)) as u32;
-            let mut left_echo_in = (((((self.emulator().read_u8(echo_address + 1) as i32) << 8) | (self.emulator().read_u8(echo_address) as i32)) as i16) & !1) as i32;
-            let mut right_echo_in = (((((self.emulator().read_u8(echo_address + 3) as i32) << 8) | (self.emulator().read_u8(echo_address + 2) as i32)) as i16) & !1) as i32;
+            let mut left_echo_in = (((((self.apu().read_u8(echo_address + 1) as i32) << 8) | (self.apu().read_u8(echo_address) as i32)) as i16) & !1) as i32;
+            let mut right_echo_in = (((((self.apu().read_u8(echo_address + 3) as i32) << 8) | (self.apu().read_u8(echo_address + 2) as i32)) as i16) & !1) as i32;
 
             left_echo_in = dsp_helpers::clamp(self.left_filter.next(left_echo_in));
             right_echo_in = dsp_helpers::clamp(self.right_filter.next(right_echo_in));
@@ -204,10 +204,10 @@ impl Dsp {
                 left_echo_out = dsp_helpers::clamp(left_echo_out + ((((left_echo_in * ((self.echo_feedback as i8) as i32)) >> 7) as i16) as i32)) & !1;
                 right_echo_out = dsp_helpers::clamp(right_echo_out + ((((right_echo_in * ((self.echo_feedback as i8) as i32)) >> 7) as i16) as i32)) & !1;
 
-                self.emulator().write_u8(echo_address + 0, left_echo_out as u8);
-                self.emulator().write_u8(echo_address + 1, (left_echo_out >> 8) as u8);
-                self.emulator().write_u8(echo_address + 2, right_echo_out as u8);
-                self.emulator().write_u8(echo_address + 3, (right_echo_out >> 8) as u8);
+                self.apu().write_u8(echo_address + 0, left_echo_out as u8);
+                self.apu().write_u8(echo_address + 1, (left_echo_out >> 8) as u8);
+                self.apu().write_u8(echo_address + 2, right_echo_out as u8);
+                self.apu().write_u8(echo_address + 3, (right_echo_out >> 8) as u8);
             }
             if self.echo_pos == 0 {
                 self.echo_length = self.calculate_echo_length();
@@ -300,8 +300,8 @@ impl Dsp {
     fn read_source_dir_address(&self, index: i32, offset: i32) -> u32 {
         let dir_address = (self.source_dir as i32) * 0x100;
         let entry_address = dir_address + index * 4;
-        let mut ret = self.emulator().read_u8((entry_address as u32) + (offset as u32)) as u32;
-        ret |= (self.emulator().read_u8((entry_address as u32) + (offset as u32) + 1) as u32) << 8;
+        let mut ret = self.apu().read_u8((entry_address as u32) + (offset as u32)) as u32;
+        ret |= (self.apu().read_u8((entry_address as u32) + (offset as u32) + 1) as u32) << 8;
         ret
     }
 
