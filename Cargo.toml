@@ -15,13 +15,6 @@ rusqlite = "0.25.3"
 snes-apu = { path = "3rdparty/snes-apu" }
 spc = { path = "3rdparty/spc" }
 
-[workspace]
-
-members = [
-    "3rdparty/snes-apu",
-    "3rdparty/spc",
-]
-
 [patch.crates-io]
 
 # If you want to use the bleeding edge version of `egui`:
