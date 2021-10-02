@@ -202,3 +202,5 @@ impl Apu {
         self.timers[2].set_start_stop_bit((value & 0x04) != 0);
     }
 }
+
+unsafe impl Send for Apu {}

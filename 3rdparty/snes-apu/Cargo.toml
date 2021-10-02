@@ -13,5 +13,5 @@ license = "BSD-2-Clause"
 spc = { path = "../spc" }
 
 [dev-dependencies]
-cpal = "0.4.4"
-futures = "0.1.1"
+anyhow = "1.0.44"
+cpal = "0.13.4"
