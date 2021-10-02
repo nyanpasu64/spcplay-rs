@@ -7,6 +7,8 @@ use anyhow::{Context, Result};
 use directories::ProjectDirs;
 use rusqlite::Connection;
 
+use crate::spcplay::SpcPlayer;
+
 #[derive(Debug)]
 struct Person {
     id: i32,
@@ -60,7 +62,7 @@ fn open_settings() -> Result<Connection> {
     Ok(conn)
 }
 
-pub struct TemplateApp {
+pub struct SpcPlayApp {
     // Example stuff:
     label: String,
     value: f32,
@@ -68,9 +70,12 @@ pub struct TemplateApp {
     conn: Connection,
 
     error_dialog: Option<String>,
+
+    spc_player: Option<SpcPlayer>,
+    spc_info: String,
 }
 
-impl TemplateApp {
+impl SpcPlayApp {
     pub fn new() -> Result<Self> {
         let conn = open_settings()?;
         Ok(Self {
@@ -79,11 +84,13 @@ impl TemplateApp {
             value: 2.7,
             conn,
             error_dialog: None,
+            spc_player: None,
+            spc_info: "".to_owned(),
         })
     }
 }
 
-impl epi::App for TemplateApp {
+impl epi::App for SpcPlayApp {
     fn name(&self) -> &str {
         "egui template"
     }
@@ -154,35 +161,15 @@ impl epi::App for TemplateApp {
             // The top panel is often a good place for a menu bar:
             egui::menu::bar(ui, |ui| {
                 egui::menu::menu(ui, "File", |ui| {
-                    if ui.button("Quit").clicked() {
-                        frame.quit();
-                    }
                     if ui.button("Run SQL").clicked() {
                         if let Err(err) = touch_sql(&self.conn) {
                             self.error_dialog = Some(err.to_string());
                         }
                     }
+                    if ui.button("Quit").clicked() {
+                        frame.quit();
+                    }
                 });
-            });
-        });
-
-        egui::SidePanel::left("side_panel").show(ctx, |ui| {
-            ui.heading("Side Panel");
-
-            ui.horizontal(|ui| {
-                ui.label("Write something: ");
-                ui.text_edit_singleline(&mut self.label);
-            });
-
-            ui.add(egui::Slider::new(&mut self.value, 0.0..=10.0).text("value"));
-            if ui.button("Increment").clicked() {
-                self.value += 1.0;
-            }
-
-            ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
-                ui.add(
-                    egui::Hyperlink::new("https://github.com/emilk/egui/").text("powered by egui"),
-                );
             });
         });
 
