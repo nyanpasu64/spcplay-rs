@@ -188,7 +188,7 @@ impl epi::App for SpcPlayApp {
             egui::Window::new("Error").open(&mut open).show(ctx, |ui| {
                 ui.label(msg);
                 if ui.button("OK").clicked() {
-                    button_pressed = false;
+                    button_pressed = true;
                 }
             });
 
